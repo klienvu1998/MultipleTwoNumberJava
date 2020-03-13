@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private long result = 0;
     private long loopNumber;
     private long number;
-    ArrayList<Long> arrLong;
+    private ArrayList<Long> arrLong;
 
     private Calculate[] calculates;
 
@@ -45,12 +45,12 @@ public class MainActivity extends AppCompatActivity {
         );
         arrLong = new ArrayList<>(MAXPOOLSIZE);
         calculates = new Calculate[MAXPOOLSIZE];
-        Mapping();
-        BtnToCalculate();
+        mapping();
+        btnToCalculate();
 
     }
 
-    private void BtnToCalculate() {
+    private void btnToCalculate() {
         btnCalculate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void Mapping() {
+    private void mapping() {
         editTextNumber1 = findViewById(R.id.editText_Number1);
         editTextNumber2 = findViewById(R.id.editText_Number2);
         textViewResult = findViewById(R.id.textView_Result);
