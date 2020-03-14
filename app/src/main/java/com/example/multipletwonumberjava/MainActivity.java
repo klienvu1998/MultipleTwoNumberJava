@@ -1,15 +1,12 @@
 package com.example.multipletwonumberjava;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -18,24 +15,30 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private EditText editTextNumber1,editTextNumber2;
-    private TextView textViewResult;
+    public static TextView textViewResult;
     private Button btnCalculate;
 
+    public final static int COMPLETED_THREAD_POOL = 100;
     private final static int COREPOOLSIZE = 2;
     private final static int MAXPOOLSIZE = Runtime.getRuntime().availableProcessors();
     private final static int QUENECAPACITY = 30;
+
     private ThreadPoolExecutor threadPoolExecutor;
-    private long result = 0;
+    public static long result = -1;
     private long loopNumber;
     private long number;
     private ArrayList<Long> arrLong;
-
     private Calculate[] calculates;
+
+    private int checkFinishTaskCount;
+    private CalculateHandler calculateHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mapping();
+        calculateHandler = new CalculateHandler();
         threadPoolExecutor = new ThreadPoolExecutor(
                 COREPOOLSIZE,
                 MAXPOOLSIZE,
@@ -45,16 +48,17 @@ public class MainActivity extends AppCompatActivity {
         );
         arrLong = new ArrayList<>(MAXPOOLSIZE);
         calculates = new Calculate[MAXPOOLSIZE];
-        mapping();
         btnToCalculate();
-
     }
+
 
     private void btnToCalculate() {
         btnCalculate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                arrLong.clear();
                 result = 0;
+                checkFinishTaskCount = 0;
                 if(!editTextNumber1.getText().toString().equals("") && !editTextNumber2.getText().toString().equals("")) {
                     loopNumber = Long.parseLong(editTextNumber1.getText().toString());
                     number = Long.parseLong(editTextNumber2.getText().toString());
@@ -64,32 +68,35 @@ public class MainActivity extends AppCompatActivity {
                     }
                     arrLong.add(loopNumber - ((MAXPOOLSIZE-1)*(loopNumber/MAXPOOLSIZE)));
 
-
                     for(int i=0;i<MAXPOOLSIZE;i++){
                         calculates[i] = new Calculate(number,arrLong.get(i),result);
                     }
-
-
                     for (int i=0;i<MAXPOOLSIZE;i++){
                         threadPoolExecutor.execute(new ThreadToCalculate(calculates[i], result, new ThreadToCalculate.ListennerThread() {
                             @Override
                             public void getResult(long tResult) {
-                                if(loopNumber<MAXPOOLSIZE){
-                                    result = tResult;
-                                }
-                                else {
+                                if(tResult!=-1){
                                     result += tResult;
+                                    checkFinishTaskCount++;
+                                    Message message = new Message();
+                                    if(checkFinishTaskCount == MAXPOOLSIZE){
+                                        message.what = COMPLETED_THREAD_POOL;
+                                    }
+                                    calculateHandler.sendMessage(message);
                                 }
-                                textViewResult.setText(result+"");
                             }
                         }));
                     }
-                    threadPoolExecutor.shutdown();
                 }
             }
         });
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        threadPoolExecutor.shutdown();
+    }
 
     private void mapping() {
         editTextNumber1 = findViewById(R.id.editText_Number1);
