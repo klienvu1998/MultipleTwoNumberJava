@@ -3,6 +3,7 @@ package com.example.multipletwonumberjava;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,9 +20,14 @@ public class MainActivity extends AppCompatActivity {
     private Button btnCalculate;
 
     public final static int COMPLETED_THREAD_POOL = 100;
-    private final static int COREPOOLSIZE = 2;
+    private final static int COREPOOLSIZE = 1;
+
+    //1 thrad
+    //Runtime.getRuntime().availableProcessors();
+    // 30 thread
+
     private final static int MAXPOOLSIZE = Runtime.getRuntime().availableProcessors();
-    private final static int QUENECAPACITY = 30;
+    private final static int QUENECAPACITY = 1;
 
     private ThreadPoolExecutor threadPoolExecutor;
     public static long result = -1;
@@ -32,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
 
     private int checkFinishTaskCount;
     private CalculateHandler calculateHandler;
+
+    private long endTime = 0;
+    private long startTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         btnCalculate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                startTime = System.currentTimeMillis();
                 arrLong.clear();
                 result = 0;
                 checkFinishTaskCount = 0;
@@ -81,6 +91,11 @@ public class MainActivity extends AppCompatActivity {
                                     Message message = new Message();
                                     if(checkFinishTaskCount == MAXPOOLSIZE){
                                         message.what = COMPLETED_THREAD_POOL;
+                                        endTime = System.currentTimeMillis();
+                                        Log.d("MainActivity",String.valueOf(endTime-startTime));
+                                        //1 thread : 2980 mili
+                                        //Core of phone : 2218 mili
+                                        //30 threads :  85071 mili
                                     }
                                     calculateHandler.sendMessage(message);
                                 }

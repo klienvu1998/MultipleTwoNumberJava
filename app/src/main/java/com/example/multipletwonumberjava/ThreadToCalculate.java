@@ -18,7 +18,9 @@ public class ThreadToCalculate implements Runnable {
     @Override
     public void run() {
         result = calculate.returnResult();
-        listener.getResult(result);
+        synchronized (this) {
+            listener.getResult(result);
+        }
     }
 
     public interface ListennerThread{
